@@ -17,21 +17,30 @@ export default function AccountPage() {
 
   useEffect(() => {
     let active = true;
-    getSupabase().auth.getSession().then(({ data, error }) => {
-      if (!active) return;
-      const user = data.session?.user;
-      if (error || !user) { router.replace("/login"); return; }
-      setEmail(user.email ?? "");
-      const { data: shop, error: shopError } = await getSupabase().from("shops")
-        .select("name,whatsapp_number").eq("user_id", user.id).maybeSingle();
-      if (shopError) {
-        setNotice(shopError.message);
+    async function loadAccount() {
+      try {
+        const { data, error } = await getSupabase().auth.getSession();
+        if (!active) return;
+        const user = data.session?.user;
+        if (error || !user) {
+          router.replace("/login");
+          return;
+        }
+        setEmail(user.email ?? "");
+        const { data: shop, error: shopError } = await getSupabase().from("shops")
+          .select("name,whatsapp_number").eq("user_id", user.id).maybeSingle();
+        if (!active) return;
+        if (shopError) setNotice("Impossible de charger la boutique. " + shopError.message);
+        setShopName(shop?.name ?? (typeof user.user_metadata?.shop_name === "string" ? user.user_metadata.shop_name : ""));
+        const savedPhone = shop?.whatsapp_number?.replace(/^\\+22901/, "");
+        setPhone(savedPhone ?? (typeof user.user_metadata?.phone_local === "string" ? user.user_metadata.phone_local : ""));
+      } catch {
+        if (active) setNotice("Impossible de charger le compte. Rechargez la page.");
+      } finally {
+        if (active) setChecking(false);
       }
-      setShopName(shop?.name ?? (typeof user.user_metadata?.shop_name === "string" ? user.user_metadata.shop_name : ""));
-      const savedPhone = shop?.whatsapp_number?.replace(/^\\+22901/, "");
-      setPhone(savedPhone ?? (typeof user.user_metadata?.phone_local === "string" ? user.user_metadata.phone_local : ""));
-      setChecking(false);
-    });
+    }
+    void loadAccount();
     return () => { active = false; };
   }, [router]);
 
