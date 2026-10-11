@@ -26,11 +26,11 @@ export default function CreateShopPage() {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+        options: { emailRedirectTo: `${window.location.origin}/onboarding` },
       });
       if (error) throw error;
       if (data.session) {
-        router.replace("/dashboard");
+        router.replace("/onboarding");
         return;
       }
       setNotice("Compte créé. Vérifiez votre boîte e-mail et confirmez votre adresse avant de vous connecter.");
@@ -48,7 +48,7 @@ export default function CreateShopPage() {
       const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/dashboard` },
+        options: { redirectTo: `${window.location.origin}/onboarding` },
       });
       if (error) throw error;
     } catch (error) {
