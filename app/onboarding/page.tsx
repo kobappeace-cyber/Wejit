@@ -22,6 +22,16 @@ export default function OnboardingPage() {
         router.replace("/login");
         return;
       }
+      const supabase = getSupabase();
+      const { data: existingShop, error: shopError } = await supabase.from("shops")
+        .select("id").eq("user_id", data.session.user.id).maybeSingle();
+      if (shopError) {
+        setNotice(shopError.message);
+      }
+      if (existingShop) {
+        router.replace("/dashboard");
+        return;
+      }
       const metadata = data.session.user.user_metadata ?? {};
       setShopName(typeof metadata.shop_name === "string" ? metadata.shop_name : "");
       setPhone(typeof metadata.phone_local === "string" ? metadata.phone_local : "");
