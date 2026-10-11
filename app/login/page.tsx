@@ -23,9 +23,13 @@ export default function LoginPage() {
     setNotice("");
     try {
       const supabase = getSupabase();
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
-      router.replace("/dashboard");
+      if (!data.user) throw new Error("Utilisateur introuvable après connexion.");
+      const { data: shop, error: shopError } = await supabase.from("shops")
+        .select("id").eq("user_id", data.user.id).maybeSingle();
+      if (shopError) throw shopError;
+      router.replace(shop ? "/dashboard" : "/onboarding");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Connexion impossible. Vérifiez vos identifiants et la configuration Supabase.");
     } finally {
@@ -40,7 +44,7 @@ export default function LoginPage() {
       const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/dashboard` },
+        options: { redirectTo: `${window.location.origin}/onboarding` },
       });
       if (error) throw error;
     } catch (error) {
