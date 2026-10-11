@@ -9,6 +9,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState("");
+  const [shopName, setShopName] = useState("Ma boutique");
+  const [phone, setPhone] = useState("");
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
@@ -23,12 +25,18 @@ export default function DashboardPage() {
           return;
         }
         setEmail(data.session.user.email ?? "");
+        setShopName(typeof data.session.user.user_metadata?.shop_name === "string" ? data.session.user.user_metadata.shop_name : "Ma boutique");
+        setPhone(typeof data.session.user.user_metadata?.phone_local === "string" ? data.session.user.user_metadata.phone_local : "");
         setChecking(false);
       });
       const { data } = supabase.auth.onAuthStateChange((_event, session) => {
         if (!active) return;
         if (!session) router.replace("/login");
-        else setEmail(session.user.email ?? "");
+        else {
+          setEmail(session.user.email ?? "");
+          setShopName(typeof session.user.user_metadata?.shop_name === "string" ? session.user.user_metadata.shop_name : "Ma boutique");
+          setPhone(typeof session.user.user_metadata?.phone_local === "string" ? session.user.user_metadata.phone_local : "");
+        }
       });
       subscription = data.subscription;
     } catch {
@@ -56,12 +64,12 @@ export default function DashboardPage() {
       <div className="side-item active"><span>▦</span> Vue d’ensemble</div>
       <div className="side-item"><span>▤</span> Commandes</div>
       <div className="side-item"><span>□</span> Produits</div>
-      <div className="side-item"><span>⚙</span> Paramètres</div>
-      <div className="sidebar-bottom"><div className="avatar">W</div><div className="account-label"><strong>Ma boutique</strong><span>{email || "Compte connecté"}</span></div></div>
+      <Link className="side-item" href="/dashboard/account"><span>◎</span> Compte</Link>
+      <div className="sidebar-bottom"><div className="avatar">{shopName.slice(0, 1).toUpperCase() || "W"}</div><div className="account-label"><strong>{shopName}</strong><span>{email || "Compte connecté"}</span></div></div>
     </aside>
     <main className="dashboard-main">
       <header className="dashboard-header"><div><p className="dash-kicker">TABLEAU DE BORD</p><h1>Vue d’ensemble</h1></div><button className="profile-button" aria-label={signingOut ? "Déconnexion en cours" : "Se déconnecter"} onClick={logout} title="Se déconnecter">{signingOut ? "…" : "↗"}</button></header>
-      <section className="welcome-row"><div><h2>Bienvenue sur Wejit 👋</h2><p>Votre espace est prêt. Configurez votre boutique pour commencer.</p></div><button className="dashboard-cta" onClick={() => window.location.assign("/dashboard/settings")}>Configurer ma boutique <span>→</span></button></section>
+      <section className="welcome-row"><div><h2>Bienvenue sur {shopName} 👋</h2><p>Votre espace est prêt.{phone ? ` Téléphone : +229 01 ${phone}` : " Complétez les informations de votre boutique dans Compte."}</p></div><button className="dashboard-cta" onClick={() => window.location.assign("/dashboard/settings")}>Configurer ma boutique <span>→</span></button></section>
       <section className="stats-grid">
         <article className="stat-card"><div className="stat-label">Revenu total</div><div className="stat-value">0 <span>FCFA</span></div><div className="stat-foot"><span className="muted-dot" /> Aucun revenu pour le moment</div></article>
         <article className="stat-card"><div className="stat-label">Commandes</div><div className="stat-value">0</div><div className="stat-foot">Les nouvelles commandes apparaîtront ici</div></article>
