@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import { makeSlug } from "@/lib/shop-data";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -42,10 +43,34 @@ export default function OnboardingPage() {
     }
     setBusy(true);
     try {
-      const { error } = await getSupabase().auth.updateUser({
+      const supabase = getSupabase();
+      const { data: updated, error } = await supabase.auth.updateUser({
         data: { shop_name: shopName.trim(), phone_local: phone, phone_country: "+229 01" },
       });
       if (error) throw error;
+      if (!updated.user) throw new Error("Impossible de retrouver le compte connecté.");
+
+      const { data: existingShop, error: lookupError } = await supabase
+        .from("shops")
+        .select("id")
+        .eq("user_id", updated.user.id)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+
+      const slugBase = makeSlug(shopName);
+      const shopPayload = {
+        user_id: updated.user.id,
+        name: shopName.trim(),
+        slug: slugBase + "-" + updated.user.id.slice(0, 6),
+        whatsapp_number: "+22901" + phone,
+      };
+      const save = existingShop
+        ? await supabase.from("shops").update({
+            name: shopPayload.name,
+            whatsapp_number: shopPayload.whatsapp_number,
+          }).eq("id", existingShop.id)
+        : await supabase.from("shops").insert(shopPayload);
+      if (save.error) throw save.error;
       router.replace("/dashboard");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Impossible d’enregistrer les informations.");
