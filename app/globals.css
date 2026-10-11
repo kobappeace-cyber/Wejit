@@ -94,3 +94,21 @@ button{cursor:pointer}
 @media(max-width:520px){.topbar{height:68px;padding:0 18px}.brand{font-size:21px}.brand-mark{width:32px;height:32px}.topbar-right{font-size:10px;gap:6px}.topbar-right .text-link{font-size:10px}.auth-main{padding:28px 14px}.auth-card{padding:27px 22px;border-radius:20px}.auth-heading h1{font-size:26px}.page-footer{padding:18px;flex-wrap:wrap;font-size:9px}.dashboard-main{padding:22px 14px}.dashboard-header h1{font-size:22px}.empty-panel{min-height:310px;padding:25px 16px}}
 
 .loading-screen{min-height:100vh;background:#080808;color:#aaa;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:12px}.loading-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#635bff;color:#fff;font-weight:800;font-size:19px}.primary-button:disabled,.google-button:disabled{opacity:.65;cursor:wait}
+
+.phone-control{display:flex;align-items:stretch;width:100%;min-height:47px;border:1px solid #e5e5e5;border-radius:10px;background:#fafafa;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.phone-control:focus-within{border-color:var(--purple);background:#fff;box-shadow:0 0 0 3px rgba(99,91,255,.12)}
+.phone-prefix{display:flex;align-items:center;gap:7px;flex-shrink:0;padding:0 11px;border-right:1px solid #e5e5e5;background:#f2f2f2;font-size:12px;font-weight:700;white-space:nowrap}
+.phone-control input{min-width:0;flex:1;width:100%;height:auto;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:0 12px;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.account-panel{max-width:680px;margin-top:28px;padding:28px;background:#101010;border:1px solid #222;border-radius:16px}
+.account-panel-heading{display:flex;align-items:center;gap:15px;margin-bottom:28px}
+.account-large-avatar{width:50px;height:50px;border-radius:15px;display:grid;place-items:center;background:#24213f;color:#aaa5ff;font-size:21px;font-weight:800}
+.account-panel-heading h2{font-size:16px;margin:0 0 7px}
+.account-panel-heading p{font-size:11px;color:#999;line-height:1.6;margin:0}
+.account-panel .field label{color:#eee}
+.account-panel .field input{color:#eee;background:#171717;border-color:#303030}
+.account-panel .field input:read-only{color:#999}
+.account-panel .field-hint{color:#888}
+.account-notice{margin:0 0 20px}
+.account-save{max-width:280px}
+.account-back{color:#c5c2ff;font-size:12px;font-weight:650}
+@media(max-width:520px){.account-panel{padding:21px 16px}.account-panel-heading{align-items:flex-start}.account-save{max-width:none}.phone-prefix{padding:0 8px;font-size:11px}}
