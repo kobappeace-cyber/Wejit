@@ -16,27 +16,32 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     let active = true;
-    getSupabase().auth.getSession().then(({ data, error }) => {
-      if (!active) return;
-      if (error || !data.session) {
-        router.replace("/login");
-        return;
+    async function checkSession() {
+      try {
+        const { data, error } = await getSupabase().auth.getSession();
+        if (!active) return;
+        if (error || !data.session) {
+          router.replace("/login");
+          return;
+        }
+        const { data: existingShop, error: shopError } = await getSupabase().from("shops")
+          .select("id").eq("user_id", data.session.user.id).maybeSingle();
+        if (!active) return;
+        if (shopError) setNotice("Impossible de vérifier la boutique. " + shopError.message);
+        if (existingShop) {
+          router.replace("/dashboard");
+          return;
+        }
+        const metadata = data.session.user.user_metadata ?? {};
+        setShopName(typeof metadata.shop_name === "string" ? metadata.shop_name : "");
+        setPhone(typeof metadata.phone_local === "string" ? metadata.phone_local : "");
+      } catch {
+        if (active) setNotice("Impossible de vérifier la session. Rechargez la page.");
+      } finally {
+        if (active) setChecking(false);
       }
-      const supabase = getSupabase();
-      const { data: existingShop, error: shopError } = await supabase.from("shops")
-        .select("id").eq("user_id", data.session.user.id).maybeSingle();
-      if (shopError) {
-        setNotice(shopError.message);
-      }
-      if (existingShop) {
-        router.replace("/dashboard");
-        return;
-      }
-      const metadata = data.session.user.user_metadata ?? {};
-      setShopName(typeof metadata.shop_name === "string" ? metadata.shop_name : "");
-      setPhone(typeof metadata.phone_local === "string" ? metadata.phone_local : "");
-      setChecking(false);
-    });
+    }
+    void checkSession();
     return () => { active = false; };
   }, [router]);
 
