@@ -33,7 +33,7 @@ export default function DashboardPage() {
         if (!active) return;
         if (shop) {
           setShopName(shop.name);
-          setPhone(typeof shop.whatsapp_number === "string" ? shop.whatsapp_number.replace(/^\\+22901/, "") : "");
+          setPhone(typeof shop.whatsapp_number === "string" ? shop.whatsapp_number.replace(/^\+22901/, "") : "");
           const [products, orders, successfulOrders] = await Promise.all([
             supabase.from("products").select("id", { count: "exact", head: true }).eq("shop_id", shop.id),
             supabase.from("orders").select("id", { count: "exact", head: true }).eq("shop_id", shop.id),
