@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import { makeSlug } from "@/lib/shop-data";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -21,8 +22,14 @@ export default function AccountPage() {
       const user = data.session?.user;
       if (error || !user) { router.replace("/login"); return; }
       setEmail(user.email ?? "");
-      setShopName(typeof user.user_metadata?.shop_name === "string" ? user.user_metadata.shop_name : "");
-      setPhone(typeof user.user_metadata?.phone_local === "string" ? user.user_metadata.phone_local : "");
+      const { data: shop, error: shopError } = await getSupabase().from("shops")
+        .select("name,whatsapp_number").eq("user_id", user.id).maybeSingle();
+      if (shopError) {
+        setNotice(shopError.message);
+      }
+      setShopName(shop?.name ?? (typeof user.user_metadata?.shop_name === "string" ? user.user_metadata.shop_name : ""));
+      const savedPhone = shop?.whatsapp_number?.replace(/^\\+22901/, "");
+      setPhone(savedPhone ?? (typeof user.user_metadata?.phone_local === "string" ? user.user_metadata.phone_local : ""));
       setChecking(false);
     });
     return () => { active = false; };
@@ -35,10 +42,25 @@ export default function AccountPage() {
     if (!shopName.trim()) { setNotice("Saisissez le nom de votre boutique."); return; }
     setBusy(true);
     try {
-      const { error } = await getSupabase().auth.updateUser({
+      const supabase = getSupabase();
+      const { data: { user }, error } = await supabase.auth.updateUser({
         data: { shop_name: shopName.trim(), phone_local: phone, phone_country: "+229 01" },
       });
       if (error) throw error;
+      if (!user) throw new Error("Session introuvable. Reconnectez-vous.");
+      const { data: existing, error: lookupError } = await supabase.from("shops")
+        .select("id").eq("user_id", user.id).maybeSingle();
+      if (lookupError) throw lookupError;
+      const payload = {
+        name: shopName.trim(),
+        whatsapp_number: "+22901" + phone,
+        slug: makeSlug(shopName) + "-" + user.id.slice(0, 6),
+        user_id: user.id,
+      };
+      const save = existing
+        ? await supabase.from("shops").update({ name: payload.name, whatsapp_number: payload.whatsapp_number }).eq("id", existing.id)
+        : await supabase.from("shops").insert(payload);
+      if (save.error) throw save.error;
       setNotice("Vos informations ont été enregistrées.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Impossible d’enregistrer les modifications.");
@@ -52,8 +74,8 @@ export default function AccountPage() {
       <Link className="brand dash-brand" href="/"><span className="brand-mark">W</span><span>Wejit</span></Link>
       <div className="workspace-label">ESPACE BOUTIQUE</div>
       <Link className="side-item" href="/dashboard"><span>▦</span> Vue d’ensemble</Link>
-      <div className="side-item"><span>▤</span> Commandes</div>
-      <div className="side-item"><span>□</span> Produits</div>
+      <Link className="side-item" href="/dashboard/orders"><span>▤</span> Commandes</Link>
+      <Link className="side-item" href="/dashboard/products"><span>□</span> Produits</Link>
       <div className="side-item active"><span>◎</span> Compte</div>
       <div className="sidebar-bottom"><div className="avatar">{shopName.slice(0, 1).toUpperCase() || "W"}</div><div className="account-label"><strong>{shopName || "Ma boutique"}</strong><span>{email}</span></div></div>
     </aside>
