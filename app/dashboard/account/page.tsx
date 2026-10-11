@@ -32,7 +32,7 @@ export default function AccountPage() {
         if (!active) return;
         if (shopError) setNotice("Impossible de charger la boutique. " + shopError.message);
         setShopName(shop?.name ?? (typeof user.user_metadata?.shop_name === "string" ? user.user_metadata.shop_name : ""));
-        const savedPhone = shop?.whatsapp_number?.replace(/^\\+22901/, "");
+        const savedPhone = shop?.whatsapp_number?.replace(/^\+22901/, "");
         setPhone(savedPhone ?? (typeof user.user_metadata?.phone_local === "string" ? user.user_metadata.phone_local : ""));
       } catch {
         if (active) setNotice("Impossible de charger le compte. Rechargez la page.");
